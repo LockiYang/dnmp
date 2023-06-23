@@ -71,6 +71,36 @@ services:
     networks:
       - default
 
+  # 为解决supervisor中不能执行php命令，构建一个带php-cli的容器
+  supervisor:
+    build:
+      context: ./services/supervisor
+      args:
+        ALPINE_VERSION: alpine:${ALPINE_VERSION}
+        TZ: "$TZ"
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_VERSION: php:${PHP_VERSION}-alpine
+        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
+    container_name: supervisor
+    ports:
+      - "${SUPERVISOR_HOST_PORT_C}:9001"
+    volumes:
+      - ${SOURCE_DIR}:/www/:rw
+      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
+      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
+      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
+      - ${DATA_DIR}/composer:/tmp/composer
+    command:
+      - /bin/sh
+      - -c
+      - |
+        supervisord -n -c /etc/supervisor/supervisord.conf
+    restart: always
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      - default
+
 #  php80:
 #    build:
 #      context: ./services/php80
@@ -235,32 +265,32 @@ services:
 #    networks:
 #          - default
 
-  # phpmyadmin:
-  #   image: phpmyadmin/phpmyadmin:latest
-  #   container_name: phpmyadmin
-  #   ports:
-  #     - "${PHPMYADMIN_HOST_PORT}:80"
-  #   volumes:
-  #     - ${PHPMYADMIN_USER_CONF_FILE}:/etc/phpmyadmin/config.user.inc.php:ro
-  #     - ${PHPMYADMIN_PHP_CONF_FILE}:/usr/local/etc/php/conf.d/php-phpmyadmin.ini:ro
-  #   networks:
-  #     - default
-  #   environment:
-  #     - PMA_HOST=mysql5
-  #     - PMA_PORT=3306
-  #     - TZ=$TZ
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    ports:
+      - "${PHPMYADMIN_HOST_PORT}:80"
+    volumes:
+      - ${PHPMYADMIN_USER_CONF_FILE}:/etc/phpmyadmin/config.user.inc.php:ro
+      - ${PHPMYADMIN_PHP_CONF_FILE}:/usr/local/etc/php/conf.d/php-phpmyadmin.ini:ro
+    networks:
+      - default
+    environment:
+      - PMA_HOST=mysql5
+      - PMA_PORT=3306
+      - TZ=$TZ
 
-  # phpredisadmin:
-  #   image: erikdubbelboer/phpredisadmin:latest
-  #   container_name: phpredisadmin
-  #   ports:
-  #     - "${REDISMYADMIN_HOST_PORT}:80"
-  #   networks:
-  #     - default
-  #   environment:
-  #     - REDIS_1_HOST=redis
-  #     - REDIS_1_PORT=6379
-  #     - TZ=$TZ
+  phpredisadmin:
+    image: erikdubbelboer/phpredisadmin:latest
+    container_name: phpredisadmin
+    ports:
+      - "${REDISMYADMIN_HOST_PORT}:80"
+    networks:
+      - default
+    environment:
+      - REDIS_1_HOST=redis
+      - REDIS_1_PORT=6379
+      - TZ=$TZ
 
 #  mongodb:
 #    image: mongo:${MONGODB_VERSION}
