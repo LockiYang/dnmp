@@ -52,7 +52,7 @@ isPhpVersionGreaterOrEqual()
 # Install extension from package file(.tgz),
 # For example:
 #
-# installExtensionFromTgz redis-5.2.2
+# installExtensionFromTgz redis-6.0.2
 #
 # Param 1: Package name with version
 # Param 2: enable options
@@ -60,14 +60,13 @@ isPhpVersionGreaterOrEqual()
 installExtensionFromTgz()
 {
     tgzName=$1
-    para1=
+    result=""
     extensionName="${tgzName%%-*}"
-    if [  $2 ]; then  
-        para1=$2
-    fi  
+    shift 1
+    result=$@
     mkdir ${extensionName}
     tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
-    ( cd ${extensionName} && phpize && ./configure ${para1} && make ${MC} && make install )
+    ( cd ${extensionName} && phpize && ./configure ${result} && make ${MC} && make install )
 
     docker-php-ext-enable ${extensionName}
 }
@@ -347,10 +346,12 @@ fi
 
 if [[ -z "${EXTENSIONS##*,imagick,*}" ]]; then
     echo "---------- Install imagick ----------"
-	apk add --no-cache file-dev
-	apk add --no-cache imagemagick-dev
-    printf "\n" | pecl install imagick-3.4.4
-    docker-php-ext-enable imagick
+    apk add --no-cache file-dev
+    apk add --no-cache imagemagick imagemagick-dev
+#    cd imagick-3.7.0 && phpize && ./configure
+#    make 
+#    make install 
+    installExtensionFromTgz imagick-3.7.0
 fi
 
 if [[ -z "${EXTENSIONS##*,rar,*}" ]]; then
@@ -526,12 +527,12 @@ if [[ -z "${EXTENSIONS##*,amqp,*}" ]]; then
     && printf '\n' | pecl install amqp \
     && docker-php-ext-enable amqp \
     && apk del .phpize-deps-configure
-    
+
 fi
 
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
     echo "---------- Install redis ----------"
-    installExtensionFromTgz redis-5.3.7
+    installExtensionFromTgz redis-6.0.2
 fi
 
 if [[ -z "${EXTENSIONS##*,apcu,*}" ]]; then
@@ -543,7 +544,7 @@ fi
 if [[ -z "${EXTENSIONS##*,memcached,*}" ]]; then
     echo "---------- Install memcached ----------"
     apk add --no-cache libmemcached-dev zlib-dev
-    pecl install memcached-3.2.3
+    pecl install memcached-3.2.0
     docker-php-ext-enable memcached
 fi
 
@@ -569,15 +570,19 @@ if [[ -z "${EXTENSIONS##*,event,*}" ]]; then
     fi
 
     echo "---------- Install event again ----------"
-    installExtensionFromTgz event-3.0.5  "--ini-name event.ini"
+    mkdir event
+    tar -xf event-3.0.8.tgz -C event --strip-components=1
+    cd event && phpize && ./configure && make  && make install
+
+    docker-php-ext-enable --ini-name event.ini event
 fi
 
 if [[ -z "${EXTENSIONS##*,mongodb,*}" ]]; then
     echo "---------- Install mongodb ----------"
     apk add --no-cache openssl-dev
     installExtensionFromTgz mongodb-1.15.2
-    docker-php-ext-configure mongodb --with-mongodb-ssl=openssl 
-    docker-php-ext-enable mongodb    
+    docker-php-ext-configure mongodb --with-mongodb-ssl=openssl
+    docker-php-ext-enable mongodb
 fi
 
 if [[ -z "${EXTENSIONS##*,yaf,*}" ]]; then
@@ -588,11 +593,11 @@ fi
 
 
 if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
-    echo "---------- Install swoole ----------"    
+    echo "---------- Install swoole ----------"
     apk add --no-cache libstdc++
     isPhpVersionGreaterOrEqual 8 0
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-5.0.2 --enable-openssl
+        installExtensionFromTgz swoole-5.0.2 --enable-openssl --enable-http2
     fi
 fi
 
@@ -690,6 +695,7 @@ if [[ -z "${EXTENSIONS##*,sdebug,*}" ]]; then
 fi
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
-    apk del .build-deps \
-    && docker-php-source delete
+#    PHP-Imagick 扩展中有所需的其他依赖项,不进行删除.build-deps 
+#    apk del .build-deps \
+     docker-php-source delete
 fi
