@@ -3,3 +3,4 @@
 !certs/localhost/
 !localhost.conf
 !v2board.conf.sample
+!buildadmin.conf.sample

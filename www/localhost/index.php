@@ -10,7 +10,7 @@ echo '<li>PHP版本：', PHP_VERSION, '</li>';
 echo '<li>Nginx版本：', $_SERVER['SERVER_SOFTWARE'], '</li>';
 echo '<li>MySQL服务器版本：', getMysqlVersion(), '</li>';
 echo '<li>Redis服务器版本：', getRedisVersion(), '</li>';
-// echo '<li>MongoDB服务器版本：', getMongoVersion(), '</li>';
+echo '<li>MongoDB服务器版本：', getMongoVersion(), '</li>';
 echo '</ul>';
 
 echo '<h2>已安装扩展</h2>';
@@ -46,6 +46,7 @@ function getRedisVersion()
         try {
             $redis = new Redis();
             $redis->connect('redis', 6379);
+            $redis->auth('123456');
             $info = $redis->info();
             return $info['redis_version'];
         } catch (Exception $e) {
