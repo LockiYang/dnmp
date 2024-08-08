@@ -53,6 +53,7 @@ services:
         PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
         CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
         PHP_EXTENSIONS: ${PHP_EXTENSIONS}
+        COMPOSER_URL: ${COMPOSER_URL}
         TZ: "$TZ"
     container_name: php
     expose:
