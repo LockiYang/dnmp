@@ -33,7 +33,13 @@ server
     }
 
     #REWRITE-START URL rewrite rule reference, any modification will invalidate the rewrite rules set by the panel
-
+    #ThinkPHP伪静态
+    location / 
+    {
+        if (!-e $request_filename){
+            rewrite  ^(.*)$  /index.php?s=$1  last;   break;
+        }
+    }
     #REWRITE-END
 
     # Forbidden files or directories
