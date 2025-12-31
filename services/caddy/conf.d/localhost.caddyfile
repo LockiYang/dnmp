@@ -1,0 +1,42 @@
+# auto_https off时，需要指定端口
+dnmp.local:80 {
+    # 网站根目录
+    root * /www/localhost
+    # 压缩
+    encode zstd gzip
+    file_server {
+        precompressed
+    }
+
+    # 静态缓存
+    @static {
+        path *.css *.js *.jpg *.png *.webp *.woff2
+    }
+    header @static {
+        Cache-Control "public, max-age=31536000, immutable"
+    }
+    
+    # 访问日志和错误日志
+    log {
+        output file /var/log/caddy/localhost.log {
+            roll_size 100MB
+            roll_keep 10
+            roll_keep_for 168h
+        }
+        format json
+    }
+
+    # 错误日志单独分拆
+    log {
+        output file /var/log/caddy/localhost.error.log
+        level ERROR
+    }
+    
+    # 安全头
+    header {
+        -Server # 隐藏 Server: Caddy 响应头
+        X-Content-Type-Options "nosniff" # 防止浏览器进行 MIME 类型嗅探
+        X-Frame-Options "DENY" # 禁止页面被iframe嵌套
+        X-XSS-Protection "1; mode=block" # 
+    }
+}
