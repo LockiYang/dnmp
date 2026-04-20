@@ -1,0 +1,8 @@
+# Caddy 主配置文件
+{
+    # 开发环境关闭自动 HTTPS，生产环境可开启
+    auto_https off
+}
+
+# 导入站点配置文件
+import /etc/caddy/conf.d/*.caddyfile
