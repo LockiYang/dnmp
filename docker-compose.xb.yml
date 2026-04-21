@@ -26,51 +26,43 @@ services:
     networks:
       - default
 
-  # 为解决supervisor中不能执行php命令，构建一个带php-cli的容器
-  supervisor:
+  php82:
     build:
-      context: ./services/supervisor
+      context: ./services/php82
       args:
-        ALPINE_VERSION: alpine:${ALPINE_VERSION}
+        DEBIAN_MIRROR_DOMAIN: deb.debian.org
+        PHP_EXTENSIONS: "$PHP82_EXTENSIONS"
         TZ: "$TZ"
-        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-        PHP_VERSION: php:${PHP_VERSION}-alpine
-        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
-    container_name: supervisor
-    ports:
-      - "${SUPERVISOR_HOST_PORT_C}:9001"
+    container_name: php82
+    expose:
+      - 9501
     volumes:
       - ${SOURCE_DIR}:/www/:rw
-      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
-      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
-      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
-      - ${DATA_DIR}/composer:/tmp/composer
-    command:
-      - /bin/sh
-      - -c
-      - |
-        supervisord -n -c /etc/supervisor/supervisord.conf
+      - ${PHP82_PHP_CONF_FILE}:/usr/local/etc/php/php.ini
+      - ${PHP82_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf
+      - ${PHP82_LOG_DIR}:/var/log/php
+      - ${PHP82_DATA_COMPOSER}:/tmp/composer
     restart: always
     cap_add:
       - SYS_PTRACE
     networks:
       - default
 
-  mysql5:
-    image: mysql:${MYSQL5_VERSION}
-    container_name: mysql5
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql
     ports:
-      - "${MYSQL5_HOST_PORT}:3306"
+      - "${MYSQL_HOST_PORT}:3306"
     volumes:
-      - ${MYSQL5_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-      - ${DATA_DIR}/mysql5:/var/lib/mysql/:rw
-      - ${MYSQL5_LOG_DIR}:/var/log/mysql/:rw
+      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+      - ${MYSQL_LOG_DIR}:/var/log/mysql/:rw
     restart: always
     networks:
       - default
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL5_ROOT_PASSWORD}"
-      MYSQL_ROOT_HOST: "${MYSQL5_ROOT_HOST}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_HOST: "${MYSQL_ROOT_HOST}"
       TZ: "$TZ"
 
   redis:
@@ -82,7 +74,7 @@ services:
       - ${REDIS_CONF_FILE}:/etc/redis.conf:ro
       - ${DATA_DIR}/redis:/data/:rw
     restart: always
-    entrypoint: ["redis-server", "/etc/redis.conf"]
+    entrypoint: [ "redis-server", "/etc/redis.conf" ]
     environment:
       TZ: "$TZ"
     networks:
