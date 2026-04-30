@@ -396,6 +396,24 @@ services:
 #    networks:
 #      - default
 
+#  postgres:
+#    image: postgres:${POSTGRES_VERSION}
+#    container_name: postgres
+#    ports:
+#      - "${POSTGRES_HOST_PORT}:5432"
+#    volumes:
+#      - ${POSTGRES_DATA_DIR}:/var/lib/postgresql/data:rw
+#      - ${POSTGRES_LOG_DIR}:/var/log/postgresql:rw
+#    restart: always
+#    networks:
+#      - default
+#    environment:
+#      POSTGRES_DB: "${POSTGRES_DB}"
+#      POSTGRES_USER: "${POSTGRES_USER}"
+#      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+#      PGDATA: /var/lib/postgresql/data/pgdata
+#      TZ: "$TZ"
+
 networks:
   default:
     driver: bridge
