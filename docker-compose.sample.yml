@@ -1,5 +1,22 @@
-version: "3"
 services:
+  caddy:
+    image: caddy:${CADDY_VERSION}
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${SOURCE_DIR}:/www/:rw
+      - ${CADDY_DATA_DIR}:/data/:rw
+      - ${CADDY_CONFD_DIR}:/etc/caddy/conf.d/:rw
+      - ${CADDY_CONF_FILE}:/etc/caddy/Caddyfile:ro
+      - ${CADDY_LOG_DIR}:/var/log/caddy/:rw
+    environment:
+      TZ: "$TZ"
+    restart: always
+    networks:
+      - default
+
   nginx:
     build:
       context: ./services/nginx
@@ -15,24 +32,6 @@ services:
       - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf
       - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params
       - ${NGINX_LOG_DIR}:/var/log/nginx
-    restart: always
-    networks:
-      - default
-
-  caddy:
-    image: caddy:${CADDY_VERSION}
-    container_name: caddy
-    ports:
-      - "${CADDY_HTTP_HOST_PORT}:80"
-      - "${CADDY_HTTPS_HOST_PORT}:443"
-    volumes:
-      - ${SOURCE_DIR}:/www/:rw
-      - ${CADDY_DATA_DIR}:/data/:rw
-      - ${CADDY_CONFD_DIR}:/etc/caddy/conf.d/:rw
-      - ${CADDY_CONF_FILE}:/etc/caddy/Caddyfile:ro
-      - ${CADDY_LOG_DIR}:/var/log/caddy/:rw
-    environment:
-      TZ: "$TZ"
     restart: always
     networks:
       - default

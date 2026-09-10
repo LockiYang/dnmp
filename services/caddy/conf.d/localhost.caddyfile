@@ -4,6 +4,16 @@ dnmp.local:80 {
     root * /www/localhost
     # 压缩
     encode zstd gzip
+
+    # 将 PHP 请求转发到同一 Docker 网络中的 PHP-FPM 服务。
+    # php_fastcgi 会自动设置 SCRIPT_FILENAME、PATH_INFO 等 FastCGI 参数。
+    php_fastcgi php74:9000 {
+        read_timeout 3600s
+        capture_stderr
+        env PHP_ADMIN_VALUE "open_basedir=/www/localhost/:/tmp/:/proc/:/sys/"
+    }
+
+    # 处理未交给 PHP-FPM 的静态文件
     file_server {
         precompressed
     }
