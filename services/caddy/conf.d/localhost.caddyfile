@@ -9,7 +9,6 @@ dnmp.local:80 {
     # php_fastcgi 会自动设置 SCRIPT_FILENAME、PATH_INFO 等 FastCGI 参数。
     php_fastcgi php74:9000 {
         read_timeout 3600s
-        capture_stderr
         env PHP_ADMIN_VALUE "open_basedir=/www/localhost/:/tmp/:/proc/:/sys/"
     }
 
