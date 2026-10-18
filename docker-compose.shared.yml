@@ -1,0 +1,124 @@
+# 共享基础组件。网络名固定为 shared，不随项目名加前缀。
+# 启动：docker compose --env-file env.shared -f docker-compose.shared.yml up -d
+#
+# 其它 Compose 加入同一网络后，可用容器名访问，例如 mysql:3306、redis:6379。
+# networks:
+#   shared:
+#     external: true
+#     name: shared
+
+services:
+  caddy:
+    image: caddy:${CADDY_VERSION}
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${SOURCE_DIR}:/www/:rw
+      - ${CADDY_DATA_DIR}:/data/:rw
+      - ${CADDY_CONFD_DIR}:/etc/caddy/conf.d/:rw
+      - ${CADDY_CONF_FILE}:/etc/caddy/Caddyfile:ro
+      - ${CADDY_LOG_DIR}:/var/log/caddy/:rw
+    environment:
+      TZ: "$TZ"
+    restart: always
+    networks:
+      - shared
+
+  nginx:
+    build:
+      context: ./services/nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${SOURCE_DIR}:/www/:rw
+      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl
+      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d
+      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf
+      - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf
+      - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params
+      - ${NGINX_LOG_DIR}:/var/log/nginx
+    restart: always
+    networks:
+      - shared
+
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql
+    ports:
+      - "${MYSQL_HOST_PORT}:3306"
+    volumes:
+      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+      - ${MYSQL_LOG_DIR}:/var/log/mysql/:rw
+    restart: always
+    networks:
+      - shared
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_HOST: "${MYSQL_ROOT_HOST}"
+      TZ: "$TZ"
+
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: redis
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+    volumes:
+      - ${REDIS_CONF_FILE}:/etc/redis.conf:ro
+      - ${DATA_DIR}/redis:/data/:rw
+    restart: always
+    entrypoint:
+      - redis-server
+      - /etc/redis.conf
+      - --requirepass
+      - ${REDIS_PASSWORD}
+    environment:
+      TZ: "$TZ"
+    networks:
+      - shared
+
+  mongodb:
+    image: mongo:${MONGODB_VERSION}
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
+      TZ: "$TZ"
+    volumes:
+      - ${DATA_DIR}/mongo:/data/db:rw
+      - ${DATA_DIR}/mongo_key:/mongo:rw
+    ports:
+      - "${MONGODB_HOST_PORT}:27017"
+    networks:
+      - shared
+    command:
+      - --auth
+
+  postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: postgres
+    ports:
+      - "${POSTGRES_HOST_PORT}:5432"
+    volumes:
+      - ${POSTGRES_DATA_DIR}:/var/lib/postgresql/data:rw
+      - ${POSTGRES_LOG_DIR}:/var/log/postgresql:rw
+    restart: always
+    networks:
+      - shared
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: "$TZ"
+
+networks:
+  shared:
+    name: shared
+    driver: bridge
+    ipam:
+      driver: default
