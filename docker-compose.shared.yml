@@ -1,11 +1,11 @@
-# 共享基础组件。网络名固定为 shared，不随项目名加前缀。
+# 共享基础组件。网络名固定为 default，不随项目名加前缀。
 # 启动：docker compose --env-file env.shared -f docker-compose.shared.yml up -d
 #
 # 其它 Compose 加入同一网络后，可用容器名访问，例如 mysql:3306、redis:6379。
 # networks:
-#   shared:
+#   default:
 #     external: true
-#     name: shared
+#     name: default
 
 services:
   caddy:
@@ -24,26 +24,7 @@ services:
       TZ: "$TZ"
     restart: always
     networks:
-      - shared
-
-  nginx:
-    build:
-      context: ./services/nginx
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ${SOURCE_DIR}:/www/:rw
-      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl
-      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d
-      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf
-      - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf
-      - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params
-      - ${NGINX_LOG_DIR}:/var/log/nginx
-    restart: always
-    networks:
-      - shared
+      - default
 
   mysql:
     image: mysql:${MYSQL_VERSION}
@@ -56,7 +37,7 @@ services:
       - ${MYSQL_LOG_DIR}:/var/log/mysql/:rw
     restart: always
     networks:
-      - shared
+      - default
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
       MYSQL_ROOT_HOST: "${MYSQL_ROOT_HOST}"
@@ -79,7 +60,7 @@ services:
     environment:
       TZ: "$TZ"
     networks:
-      - shared
+      - default
 
   mongodb:
     image: mongo:${MONGODB_VERSION}
@@ -94,7 +75,7 @@ services:
     ports:
       - "${MONGODB_HOST_PORT}:27017"
     networks:
-      - shared
+      - default
     command:
       - --auth
 
@@ -108,7 +89,7 @@ services:
       - ${POSTGRES_LOG_DIR}:/var/log/postgresql:rw
     restart: always
     networks:
-      - shared
+      - default
     environment:
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
@@ -117,8 +98,8 @@ services:
       TZ: "$TZ"
 
 networks:
-  shared:
-    name: shared
+  default:
+    name: default
     driver: bridge
     ipam:
       driver: default
