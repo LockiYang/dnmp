@@ -1,0 +1,23 @@
+# First run: bash services/php74/backports/build.sh
+# Merge with: docker compose -f docker-compose.yml -f docker-compose.php74-patched.yml ...
+services:
+  php74:
+    image: dnmp/php74:7.4.33-backports-9f3f6763497a
+    build:
+      context: ./services/php74
+      args:
+        PHP_VERSION: dnmp/php74-base:7.4.33-backports-9f3f6763497a
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_EXTENSIONS: ${PHP74_EXTENSIONS}
+        TZ: ${TZ}
+    volumes:
+      - ${SOURCE_DIR}:/www:rw
+      - ${PHP74_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP74_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ${PHP74_LOG_DIR}:/var/log/php
+      - ${DATA_DIR}/composer:/tmp/composer
+    expose:
+      - "9000"
+    restart: unless-stopped
+    networks:
+      - default
