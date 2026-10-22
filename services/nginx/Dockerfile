@@ -1,3 +1,4 @@
-FROM nginx:1.26-alpine
+ARG NGINX_VERSION
+FROM ${NGINX_VERSION}
 
 WORKDIR /www
